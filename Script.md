@@ -111,15 +111,6 @@ local thresholdValues = {
     ["1SpD (Septendecillion)"] = 1e54,
 }
 
-SettingsTab:AddDropdown({
-    Name = "Threshold Options",
-    Options = thresholdOptions,
-    Default = "1K (Thousand)",
-    Callback = function(selected)
-        layoutSwitchThreshold = thresholdValues[selected]
-    end
-})
-
 OrionLib:Init()
 
 
