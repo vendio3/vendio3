@@ -116,7 +116,7 @@ OrionLib:Init()
 
 -- Dropdown for Layout Switch Threshold
 SettingsTab:AddDropdown({
-    Name = "Select Layout Switch Threshold",
+    Name = "Select Layout Switch (What cash value to switch)",
     Options = thresholdOptions,
     Default = "1K (Thousand)",
     Callback = function(selected)
@@ -126,7 +126,7 @@ SettingsTab:AddDropdown({
 
 -- Toggle for Auto Layout Switching (1 and 2)
 SettingsTab:AddToggle({
-    Name = "Auto Layout Switch (1 and 2)",
+    Name = "Auto Layout Switch (1 to 2)",
     Default = false,
     Callback = function(state)
         autoLayoutSwitch12 = state
@@ -138,7 +138,7 @@ SettingsTab:AddToggle({
 
 -- Toggle for Auto Layout Switching (1 and 3)
 SettingsTab:AddToggle({
-    Name = "Auto Layout Switch (1 and 3)",
+    Name = "Auto Layout Switch (1 to 3)",
     Default = false,
     Callback = function(state)
         autoLayoutSwitch13 = state
@@ -313,7 +313,7 @@ for i, v in pairs(rebirthOptions) do
 end
 
 SettingsTab:AddDropdown({
-    Name = "Select Auto Rebirth Threshold",
+    Name = "Select Auto Rebirth (Only rebirth when the cash is meet",
     Options = rebirthOptions,
     Default = "1K (Thousand)",
     Callback = function(selected)
@@ -342,7 +342,7 @@ SettingsTab:AddToggle({
 
 -- Auto Teleport & Stay Toggle
 MainTab:AddToggle({
-    Name = "Auto Teleport & Stay",
+    Name = "Auto Teleport to Boxes & Stay",
     Default = false,
     Description = "Teleports to each box and stays at the last detected box, only looping back to the original position when no boxes are detected.",
     Callback = function(state)
