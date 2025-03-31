@@ -1,0 +1,400 @@
+local OrionLib = loadstring(game:HttpGet('https://raw.githubusercontent.com/jensonhirst/Orion/main/source'))()
+
+local Window = OrionLib:MakeWindow({Name = "Vendios", HidePremium = false, SaveConfig = true, ConfigFolder = "VendioConfig", IntroEnabled = false})
+
+local MainTab = Window:MakeTab({Name = "Main", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+
+MainTab:AddButton({
+    Name = "Magic Dagger",
+    Callback = function()
+        while wait() do
+            local args = {
+                [1] = "Slash",
+                [2] = Vector3.new(-1076.98681640625, 97.60791015625, 11828.2587890625)
+            }
+
+            game:GetService("Players").LocalPlayer.Character:FindFirstChild("Magic Dagger").LocalScript:FindFirstChild("Magic Dagger"):FireServer(unpack(args))
+        end
+    end
+})
+
+MainTab:AddButton({
+    Name = "Dagger",
+    Callback = function()
+        while wait() do
+            local args = {
+                [1] = "Slash",
+                [2] = Vector3.new(-1220.1859130859375, 100.51947021484375, 2795.83447265625)
+            }
+
+            game:GetService("Players").LocalPlayer.Character:FindFirstChild("Doomwood Dagger").LocalScript.Dagger:FireServer(unpack(args))
+        end
+    end
+})
+
+MainTab:AddButton({
+    Name = "Short Sword",
+    Callback = function()
+        while wait() do
+            local args = {
+                [1] = "Slash",
+                [2] = Vector3.new(1239.0587158203125, 9.45949935913086, 2231.968017578125)
+            }
+
+            game:GetService("Players").LocalPlayer.Character.Shortsword.LocalScript.Dagger:FireServer(unpack(args))
+        end
+    end
+})
+
+MainTab:AddButton({
+    Name = "Cutlass",
+    Callback = function()
+        while wait() do
+            local args = {
+                [1] = "Slash",
+                [2] = Vector3.new(1253.71484375, 10.161378860473633, 2247.109619140625)
+            }
+
+            game:GetService("Players").LocalPlayer.Character.Cutlass.LocalScript.Sword:FireServer(unpack(args))
+        end
+    end
+})
+
+MainTab:AddButton({
+    Name = "Deluxe Cutlass",
+    Callback = function()
+        while wait() do
+            local args = {
+                [1] = "Slash",
+                [2] = Vector3.new(1253.71484375, 10.161378860473633, 2247.109619140625)
+            }
+
+         game:GetService("Players").LocalPlayer.Character:FindFirstChild("Deluxe Cutlass").LocalScript.Sword:FireServer(unpack(args))
+        end
+    end
+})
+
+
+MainTab:AddButton({
+    Name = "Dual Katana",
+    Callback = function()
+        while wait() do
+            local args = {
+                [1] = "Slash",
+                [2] = Vector3.new(5598.7626953125, 1342.1240234375, 934.3724975585938)
+            }
+
+            game:GetService("Players").LocalPlayer.Character:FindFirstChild("Dual Katanas").LocalScript.Sword:FireServer(unpack(args))
+        end
+    end
+})
+
+MainTab:AddButton({
+    Name = "Sword of Doom's Wrath",
+    Callback = function()
+        while wait() do
+            local args = {
+                [1] = "Slash",
+                [2] = Vector3.new(-1287.990966796875, 100.55126953125, 2835.844970703125)
+            }
+
+            game:GetService("Players").LocalPlayer.Character:FindFirstChild("Sword of Doom's Wrath").LocalScript.Cutlass:FireServer(unpack(args))
+        end
+    end
+})
+
+MainTab:AddButton({
+    Name = "Doomwood Club",
+    Callback = function()
+        while wait() do
+            local args = {
+                [1] = "Slash",
+                [2] = Vector3.new(-1291.2510986328125, 100.59980773925781, 2799.686767578125)
+            }
+
+            game:GetService("Players").LocalPlayer.Character:FindFirstChild("Doomwood Club").LocalScript.Club:FireServer(unpack(args))
+        end
+    end
+})
+
+MainTab:AddButton({
+    Name = "Colossal Cutlass",
+    Callback = function()
+        while wait() do
+            local args = {
+                [1] = "Slash",
+                [2] = Vector3.new(4470.39892578125, 8.52783203125, -4632.8779296875)
+            }
+
+            game:GetService("Players").LocalPlayer.Character:FindFirstChild("Colossal Cutlass").LocalScript.Sword:FireServer(unpack(args))
+        end
+    end
+})
+
+MainTab:AddButton({
+    Name = "Magic Katana",
+    Callback = function()
+        while wait() do
+            local args = {
+                [1] = "Slash",
+                [2] = Vector3.new(1672.248779296875, 177.14920043945312, -6226.80078125)
+            }
+
+            game:GetService("Players").LocalPlayer.Character:FindFirstChild("Magic Katana").LocalScript:FindFirstChild("Magic Katana"):FireServer(unpack(args))
+        end
+    end
+})
+
+local PlayerTab = Window:MakeTab({Name = "Player", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+
+PlayerTab:AddToggle({
+    Name = "Auto Recharge",
+    Default = false,
+    Callback = function(state)
+        getgenv().AutoRechargeToggle = state
+        while getgenv().AutoRechargeToggle and wait() do
+            local args = {
+                [1] = "Charge"
+            }
+
+            game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Events"):WaitForChild("Charge"):FireServer(unpack(args))
+
+            local args = {
+                [1] = "ChargeEnd"
+            }
+
+            game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Events"):WaitForChild("Charge"):FireServer(unpack(args))
+        end
+    end
+})
+local DungeonTab = Window:MakeTab({Name = "Pyramid", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+
+DungeonTab:AddButton({
+    Name = "Magic Bow",
+    Callback = function()
+        while wait() do
+            local args = {
+                [1] = 1,
+                [2] = Vector3.new(-1118.827392578125, 21.448278427124023, 25.697601318359375)
+            }
+
+            game:GetService("Players").LocalPlayer.Character:FindFirstChild("Magic Bow").LocalScript:FindFirstChild("Magic Bow"):FireServer(unpack(args))
+        end
+    end
+})
+
+local isTargeting = false -- Toggle state
+
+-- Function to find the closest enemy
+local function getClosestEnemy()
+    local player = game:GetService("Players").LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+
+    if not humanoidRootPart then
+        return nil
+    end
+
+    local closestEnemy = nil
+    local closestDistance = math.huge
+
+    for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+        if enemy:FindFirstChild("HumanoidRootPart") then
+            local distance = (humanoidRootPart.Position - enemy.HumanoidRootPart.Position).Magnitude
+            if distance < closestDistance then
+                closestDistance = distance
+                closestEnemy = enemy
+            end
+        end
+    end
+
+    return closestEnemy
+end
+
+-- Function to target the closest enemy
+local function targetClosestEnemy()
+    while isTargeting do
+        local closestEnemy = getClosestEnemy()
+        if closestEnemy and closestEnemy:FindFirstChild("HumanoidRootPart") then
+            local args = {
+                [1] = 1,
+                [2] = closestEnemy.HumanoidRootPart.Position -- Target the closest enemy
+            }
+
+            local magicBow = game:GetService("Players").LocalPlayer.Character:FindFirstChild("Magic Bow")
+            if magicBow and magicBow:FindFirstChild("LocalScript") and magicBow.LocalScript:FindFirstChild("Magic Bow") then
+                magicBow.LocalScript["Magic Bow"]:FireServer(unpack(args))
+            else
+                warn("Magic Bow script not found!")
+            end
+        else
+            warn("No enemies found nearby!")
+        end
+        wait(0.1) -- Adjust the loop speed to control targeting frequency
+    end
+end
+
+-- Create a toggle button in OrionLib
+Window:MakeTab({
+    Name = "Magic bow target closest enemy",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+}):AddToggle({
+    Name = "Target Closest Enemy with bow",
+    Default = false,
+    Callback = function(state)
+        isTargeting = state
+        if isTargeting then
+            targetClosestEnemy()
+        end
+    end
+})
+
+-- Initialize OrionLib UI
+OrionLib:Init()
+
+local Players = game:GetService("Players")
+local isTeleporting = false -- Toggle state
+local teleportRange = 20 -- The maximum distance to instantly teleport
+
+-- Function to find the closest enemy
+local function getClosestEnemy()
+    local player = Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+
+    if not humanoidRootPart then
+        return nil
+    end
+
+    local closestEnemy = nil
+    local closestDistance = math.huge
+
+    for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+        if enemy:FindFirstChild("HumanoidRootPart") then
+            local distance = (humanoidRootPart.Position - enemy.HumanoidRootPart.Position).Magnitude
+            if distance < closestDistance then
+                closestDistance = distance
+                closestEnemy = enemy
+            end
+        end
+    end
+
+    return closestEnemy, closestDistance
+end
+
+-- Function to teleport underneath the closest enemy and face the sky
+local function teleportToEnemy()
+    local player = Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+
+    if not humanoidRootPart then
+        warn("HumanoidRootPart not found!")
+        return
+    end
+
+    while isTeleporting do
+        local closestEnemy, distance = getClosestEnemy()
+        if closestEnemy and closestEnemy:FindFirstChild("HumanoidRootPart") then
+            if distance <= teleportRange then
+                local enemyRoot = closestEnemy.HumanoidRootPart
+
+                -- Calculate position underneath the enemy
+                local targetPosition = enemyRoot.Position - Vector3.new(0, enemyRoot.Size.Y / 2 + 3, 0)
+
+                -- Make the player face upward (sky-facing orientation)
+                local newCFrame = CFrame.new(targetPosition) * CFrame.Angles(math.rad(-90), 0, 0)
+
+                humanoidRootPart.CFrame = newCFrame -- Instantly set position and rotation
+            else
+                warn("No enemies within teleport range!")
+            end
+        else
+            warn("No nearby enemies found!")
+        end
+
+        wait(0.1) -- Adjust frequency of checking for nearby enemies
+    end
+end
+
+-- Create a toggle button in OrionLib
+Window:MakeTab({
+    Name = "Main",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+}):AddToggle({
+    Name = "Teleport Underneath Closest Enemy (Facing Sky)",
+    Default = false,
+    Callback = function(state)
+        isTeleporting = state
+        if isTeleporting then
+            teleportToEnemy()
+        end
+    end
+})
+
+-- Initialize OrionLib UI
+OrionLib:Init()
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+local isTweenTeleporting = false -- Toggle state
+
+-- Function to tween teleport to a target position
+local function tweenToPosition(targetPosition, duration)
+    if not humanoidRootPart then
+        warn("HumanoidRootPart not found!")
+        return
+    end
+
+    local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+    local tween = TweenService:Create(humanoidRootPart, tweenInfo, {CFrame = CFrame.new(targetPosition)})
+    tween:Play()
+
+    -- Wait for the tween to complete
+    tween.Completed:Wait()
+end
+
+-- Function to teleport to all shards
+local function teleportToAllShards()
+    if not workspace:FindFirstChild("Map") or not workspace.Map:FindFirstChild("SeaShards") then
+        warn("SeaShards not found in the workspace!")
+        return
+    end
+
+    local shards = workspace.Map.SeaShards:GetChildren()
+
+    for _, shard in ipairs(shards) do
+        if shard:IsA("BasePart") then
+            local targetPosition = shard.Position
+            tweenToPosition(targetPosition, 2) -- Smoothly teleport to each shard with a 2-second duration
+        end
+    end
+end
+
+-- Example of creating a toggle button (optional, for UI toggling)
+
+Window:MakeTab({
+    Name = "Shards",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+}):AddToggle({
+    Name = "Tween Teleport to All Shards",
+    Default = false,
+    Callback = function(state)
+        isTweenTeleporting = state
+        if isTweenTeleporting then
+            teleportToAllShards()
+        end
+    end
+})
+
+-- Initialize OrionLib UI
+OrionLib:Init()
+
