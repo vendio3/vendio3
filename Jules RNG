@@ -1,0 +1,789 @@
+-- Load OrionLib first
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/jensonhirst/Orion/main/source')))()
+
+-- Create the GUI window
+local Window = OrionLib:MakeWindow({
+    Name = "Vendio's Auto Roll ⚡",
+    HidePremium = false,
+    SaveConfig = false,
+    IntroText = "Handling Auras with Ease 🔥"
+})
+
+-- References
+local LocalPlayer = game.Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Aura List
+local auraList = {
+       "/|Errxr|\\",
+    "911 // SHADOW STALKER",
+    "ACCELERATION",
+    "AEGELSEEKER",
+    "ASUNDER",
+    "Ace",
+    "Antimatter",
+    "Aura Farming",
+    "Auric Bloom",
+    "Aurora",
+    "Azure Periastron",
+    "BAGLESEEKER",
+    "Baker",
+    "Barista",
+    "Basic",
+    "Bejeweled",
+    "Bloom",
+    "Bloomed",
+    "CATACLYSM",
+    "CONCEPT",
+    "CORRECT DEITY",
+    "Celebrity",
+    "Chronos",
+    "Chronos: True Form",
+    "Clickbait",
+    "Common",
+    "Constellar",
+    "Constellation",
+    "Coupled: Blue",
+    "Coupled: Pink",
+    "Crystallized",
+    "Cupid",
+    "Cupid: True Form",
+    "Cyberspace",
+    "DELTA",
+    "DESCOHERENCE",
+    "DIAMOND",
+    "DISTORTION",
+    "Dark Matter",
+    "Dreams",
+    "ENCORE",
+    "Eclipsed",
+    "Eclipsed: True Form",
+    "Empty",
+    "Epistle",
+    "Eternal",
+    "FALSE DEITY",
+    "Fallen Angel",
+    "Festival",
+    "Fiend",
+    "Flame",
+    "Flames Curse",
+    "Forever",
+    "Frigid",
+    "Frost",
+    "GALACTIC",
+    "GAME TIME",
+    "GAME TIME: True Form",
+    "GATO",
+    "GLADIATOR",
+    "GOLDEN",
+    "Gale",
+    "Glacial",
+    "Grim Reaper",
+    "Grim Reaper: True Form",
+    "Harmony",
+    "Heal",
+    "Heat",
+    "Honeymoon",
+    "Infernal",
+    "Infinity",
+    "Iridescent",
+    "Iridescent: True Form",
+    "Jazzophrenia",
+    "Jimbo",
+    "Jule",
+    "Last Call from this Phone",
+    "Lover",
+    "MOAI",
+    "Mistlesnow",
+    "Moonlit",
+    "NULL",
+    "NULLSCAPES",
+    "Nebula",
+    "Neptune",
+    "Numerical",
+    "Observer",
+    "Observer: False Form",
+    "Obsession",
+    "Omniscient",
+    "Particle Emitter",
+    "Prism",
+    "Prism: True Form",
+    "Prismatic",
+    "Prismatic: True Form",
+    "Promise",
+    "Rare",
+    "Reborn",
+    "Reverie",
+    "Rizz",
+    "Rockstar",
+    "SAMURAI",
+    "SANG WOO",
+    "SHADOW STALKER",
+    "SINISTER",
+    "STARFALL",
+    "SUPERNOVA",
+    "SUPERNOVA : True Form",
+    "SUPREME",
+    "Sakura",
+    "Santa's Sleigh",
+    "Serenity",
+    "Shattered",
+    "Shiver",
+    "Shoreblooms",
+    "Singularity",
+    "Skibidi",
+    "Soar",
+    "Sorcerous",
+    "Stalemate",
+    "Star Spotter",
+    "Starfire",
+    "Starstruck",
+    "Steampunk",
+    "Storm",
+    "Storm: True Form",
+    "Syberis",
+    "THE ULTIMATE BATTLE",
+    "TRAGEDY",
+    "Teacher",
+    "Tidal",
+    "Uncommon",
+    "VIRTUAL",
+    "Voltage",
+    "White Place: Close",
+    "White Space - Far",
+    "White Space - Last Call",
+    "White Space - Terminal",
+    "Wild West",
+    "ZENITH",
+    "[Hardcore] /|Errxr|\\",
+    "[Hardcore] ACCELERATION",
+    "[Hardcore] AEGELSEEKER",
+    "[Hardcore] ASUNDER",
+    "[Hardcore] Ace",
+    "[Hardcore] Antimatter",
+    "[Hardcore] Auric Bloom",
+    "[Hardcore] Aurora",
+    "[Hardcore] Azure Periastron",
+    "[Hardcore] Baker",
+    "[Hardcore] Barista",
+    "[Hardcore] Basic",
+    "[Hardcore] Bejeweled",
+    "[Hardcore] Bloom",
+    "[Hardcore] Bloomed",
+    "[Hardcore] CATACLYSM",
+    "[Hardcore] CONCEPT",
+    "[Hardcore] Celebrity",
+    "[Hardcore] Chronos",
+    "[Hardcore] Chronos: True Form",
+    "[Hardcore] Common",
+    "[Hardcore] Constellar",
+    "[Hardcore] Constellation",
+    "[Hardcore] Coupled: Blue",
+    "[Hardcore] Coupled: Pink",
+    "[Hardcore] Crystallized",
+    "[Hardcore] Cupid",
+    "[Hardcore] Cyberspace",
+    "[Hardcore] DELTA",
+    "[Hardcore] DESCOHERENCE",
+    "[Hardcore] DIAMOND",
+    "[Hardcore] DISTORTION",
+    "[Hardcore] Dark Matter",
+    "[Hardcore] Dreams",
+    "[Hardcore] ENCORE",
+    "[Hardcore] Eclipsed",
+    "[Hardcore] Eclipsed: True Form",
+    "[Hardcore] Epistle",
+    "[Hardcore] Eternal",
+    "[Hardcore] FALSE DEITY",
+    "[Hardcore] Fallen Angel",
+    "[Hardcore] Festival",
+    "[Hardcore] Fiend",
+    "[Hardcore] Flame",
+    "[Hardcore] Flames Curse",
+    "[Hardcore] Forever",
+    "[Hardcore] Frigid",
+    "[Hardcore] Frost",
+    "[Hardcore] GALACTIC",
+    "[Hardcore] GAME TIME",
+    "[Hardcore] GAME TIME: True Form",
+    "[Hardcore] GATO",
+    "[Hardcore] GLADIATOR",
+    "[Hardcore] GOLDEN",
+    "[Hardcore] Gale",
+    "[Hardcore] Glacial",
+    "[Hardcore] Grim Reaper",
+    "[Hardcore] Grim Reaper: True Form",
+    "[Hardcore] Harmony",
+    "[Hardcore] Heat",
+    "[Hardcore] Honeymoon",
+    "[Hardcore] Infernal",
+    "[Hardcore] Infinity",
+    "[Hardcore] Iridescent",
+    "[Hardcore] Iridescent: True Form",
+    "[Hardcore] Jazzophrenia",
+    "[Hardcore] Jule",
+    "[Hardcore] Lover",
+    "[Hardcore] MOAI",
+    "[Hardcore] Mistlesnow",
+    "[Hardcore] Moonlit",
+    "[Hardcore] NULL",
+    "[Hardcore] NULLSCAPES",
+    "[Hardcore] Nebula",
+    "[Hardcore] Neptune",
+    "[Hardcore] Numerical",
+    "[Hardcore] Observer",
+    "[Hardcore] Obsession",
+    "[Hardcore] Omniscient",
+    "[Hardcore] Prism",
+    "[Hardcore] Prism: True Form",
+    "[Hardcore] Prismatic",
+    "[Hardcore] Prismatic: True Form",
+    "[Hardcore] Promise",
+    "[Hardcore] Rare",
+    "[Hardcore] Reborn",
+    "[Hardcore] Reverie",
+    "[Hardcore] Rizz",
+    "[Hardcore] SAMURAI",
+    "[Hardcore] SHADOW STALKER",
+    "[Hardcore] SINISTER",
+    "[Hardcore] STARFALL",
+    "[Hardcore] SUPERNOVA",
+    "[Hardcore] SUPERNOVA : True Form",
+    "[Hardcore] SUPREME",
+    "[Hardcore] Sakura",
+    "[Hardcore] Santa's Sleigh",
+    "[Hardcore] Serenity",
+    "[Hardcore] Shattered",
+    "[Hardcore] Shiver",
+    "[Hardcore] Shoreblooms",
+    "[Hardcore] Singularity",
+    "[Hardcore] Soar",
+    "[Hardcore] Sorcerous",
+    "[Hardcore] Stalemate",
+    "[Hardcore] Star Spotter",
+    "[Hardcore] Starfire",
+    "[Hardcore] Starstruck",
+    "[Hardcore] Steampunk",
+    "[Hardcore] Storm",
+    "[Hardcore] Storm: True Form",
+    "[Hardcore] Syberis",
+    "[Hardcore] TRAGEDY",
+    "[Hardcore] Teacher",
+    "[Hardcore] Tidal",
+    "[Hardcore] Uncommon",
+    "[Hardcore] VIRTUAL",
+    "[Hardcore] Voltage",
+    "[Hardcore] White Space - Far",
+    "[Hardcore] White Space - Last Call",
+    "[Hardcore] White Space - Terminal",
+    "[Hardcore] Wild West",
+    "[Hardcore] ZENITH",
+    "[Hardcore] altar",
+    "[Hardcore] folklore",
+    "[Hardcore] heh",
+    "[Hardcore] lost",
+    "[Hardcore] voidspire",
+    "[Hardcore] zero",
+    "[Hardcore] zero: true form",
+    "altar",
+    "e-kitten",
+    "folklore",
+    "heh",
+    "john",
+    "lost",
+    "regret",
+    "shattered false form",
+    "texturemash",
+    "voidspire",
+    "zero",
+    "zero: true form"
+}
+
+-- State
+local isLooping = false
+
+-- Start the aura handling loop
+local function startAuraLoop()
+    if isLooping then return end
+    isLooping = true
+
+    task.spawn(function()
+        while isLooping do
+            -- Call InvokeServer
+            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("ZachRLL"):InvokeServer()
+
+            -- Iterate through each aura in the list and fire the AcceptAura function
+            for _, aura in ipairs(auraList) do
+                local args = {aura, false}  -- Set the first argument to the aura name and the second to false
+                ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("AcceptAura"):FireServer(unpack(args))
+            end
+
+            -- Wait before running the loop again
+            wait(0.001)  -- 1 second wait between each iteration (adjust as needed)
+        end
+    end)
+end
+
+-- Stop the aura handling loop
+local function stopAuraLoop()
+    isLooping = false
+end
+
+-- UI Toggle Button for the Aura Loop
+Window:MakeTab({
+    Name = "⚡ Aura Handler",
+    Icon = "rbxassetid://6031068437",
+    PremiumOnly = false
+}):AddToggle({
+    Name = "Enable Auto Roll",
+    Default = false,
+    Callback = function(toggle)
+        if toggle then
+            print("Aura Loop Started")
+            startAuraLoop()  -- Start the loop when toggled on
+        else
+            print("Aura Loop Stopped")
+            stopAuraLoop()  -- Stop the loop when toggled off
+        end
+    end
+})
+
+
+
+-- Launch Orion GUI
+OrionLib:Init()
+
+
+-- Create GUI Window
+
+-- Create Tab
+local MainTab = Window:MakeTab({
+	Name = "ESP Tools",
+	Icon = "rbxassetid://7733960981",
+	PremiumOnly = false
+})
+
+-- ESP Variables
+local ESPEnabled = false
+local espObjects = {}
+local potionsFolder = workspace:WaitForChild("Game"):WaitForChild("Potions")
+
+-- ESP Label Maker
+local function createLabel(part, folderName)
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "ESPLabel"
+	billboard.Adornee = part
+	billboard.Size = UDim2.new(0, 100, 0, 20)
+	billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+	billboard.AlwaysOnTop = true
+	billboard.Parent = part
+
+	local textLabel = Instance.new("TextLabel")
+	textLabel.Size = UDim2.new(1, 0, 1, 0)
+	textLabel.BackgroundTransparency = 1
+	textLabel.Text = folderName
+	textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	textLabel.TextStrokeTransparency = 0.5
+	textLabel.TextScaled = true
+	textLabel.Font = Enum.Font.SourceSansBold
+	textLabel.Parent = billboard
+end
+
+-- Create ESP Elements
+local function createESP(part)
+	if not part:IsA("BasePart") or espObjects[part] then return end
+
+	local folderName = "Unknown"
+	local parent = part.Parent
+	while parent and parent ~= potionsFolder do
+		if parent.Parent == potionsFolder then
+			folderName = parent.Name
+			break
+		end
+		parent = parent.Parent
+	end
+
+	local highlight = Instance.new("Highlight")
+	highlight.Adornee = part
+	highlight.FillColor = Color3.fromRGB(255, 85, 255)
+	highlight.OutlineColor = Color3.new(1, 1, 1)
+	highlight.FillTransparency = 0.25
+	highlight.OutlineTransparency = 0
+	highlight.Parent = part
+
+	createLabel(part, folderName)
+
+	espObjects[part] = {
+		highlight = highlight
+	}
+end
+
+-- Remove ESP
+local function cleanupESP(part)
+	if espObjects[part] then
+		if part:FindFirstChild("ESPLabel") then
+			part.ESPLabel:Destroy()
+		end
+		if espObjects[part].highlight then
+			espObjects[part].highlight:Destroy()
+		end
+		espObjects[part] = nil
+	end
+end
+
+-- Toggle Function
+local function toggleESP(state)
+	ESPEnabled = state
+
+	if state then
+		for _, part in ipairs(potionsFolder:GetDescendants()) do
+			if part:IsA("BasePart") then
+				createESP(part)
+			end
+		end
+	else
+		for part in pairs(espObjects) do
+			cleanupESP(part)
+		end
+	end
+end
+
+-- Auto-update on changes
+potionsFolder.DescendantAdded:Connect(function(part)
+	if ESPEnabled and part:IsA("BasePart") then
+		createESP(part)
+	end
+end)
+
+potionsFolder.DescendantRemoving:Connect(function(part)
+	if espObjects[part] then
+		cleanupESP(part)
+	end
+end)
+
+-- Add Toggle to Orion GUI
+MainTab:AddToggle({
+	Name = "🧪 Potion ESP (All Folders)",
+	Default = false,
+	Callback = function(state)
+		toggleESP(state)
+	end
+})
+
+-- Start GUI
+OrionLib:Init()
+
+local autoDestroy = false
+
+-- List of auras to auto destroy
+local auraDeleteList = {
+       "/|Errxr|\\",
+    "911 // SHADOW STALKER",
+    "ACCELERATION",
+    "AEGELSEEKER",
+    "ASUNDER",
+    "Ace",
+    "Antimatter",
+    "Aura Farming",
+    "Auric Bloom",
+    "Aurora",
+    "Azure Periastron",
+    "BAGLESEEKER",
+    "Baker",
+    "Barista",
+    "Basic",
+    "Bejeweled",
+    "Bloom",
+    "Bloomed",
+    "CATACLYSM",
+    "CONCEPT",
+    "CORRECT DEITY",
+    "Celebrity",
+    "Chronos",
+    "Chronos: True Form",
+    "Clickbait",
+    "Common",
+    "Constellar",
+    "Constellation",
+    "Coupled: Blue",
+    "Coupled: Pink",
+    "Crystallized",
+    "Cupid",
+    "Cupid: True Form",
+    "Cyberspace",
+    "DELTA",
+    "DESCOHERENCE",
+    "DIAMOND",
+    "DISTORTION",
+    "Dark Matter",
+    "Dreams",
+    "ENCORE",
+    "Eclipsed",
+    "Eclipsed: True Form",
+    "Empty",
+    "Epistle",
+    "Eternal",
+    "FALSE DEITY",
+    "Fallen Angel",
+    "Festival",
+    "Fiend",
+    "Flame",
+    "Flames Curse",
+    "Forever",
+    "Frigid",
+    "Frost",
+    "GALACTIC",
+    "GAME TIME",
+    "GAME TIME: True Form",
+    "GATO",
+    "GLADIATOR",
+    "GOLDEN",
+    "Gale",
+    "Glacial",
+    "Grim Reaper",
+    "Grim Reaper: True Form",
+    "Harmony",
+    "Heal",
+    "Heat",
+    "Honeymoon",
+    "Infernal",
+    "Infinity",
+    "Iridescent",
+    "Iridescent: True Form",
+    "Jazzophrenia",
+    "Jimbo",
+    "Jule",
+    "Last Call from this Phone",
+    "Lover",
+    "MOAI",
+    "Mistlesnow",
+    "Moonlit",
+    "NULL",
+    "NULLSCAPES",
+    "Nebula",
+    "Neptune",
+    "Numerical",
+    "Observer",
+    "Observer: False Form",
+    "Obsession",
+    "Omniscient",
+    "Particle Emitter",
+    "Prism",
+    "Prism: True Form",
+    "Prismatic",
+    "Prismatic: True Form",
+    "Promise",
+    "Rare",
+    "Reborn",
+    "Reverie",
+    "Rizz",
+    "Rockstar",
+    "SAMURAI",
+    "SANG WOO",
+    "SHADOW STALKER",
+    "SINISTER",
+    "STARFALL",
+    "SUPERNOVA",
+    "SUPERNOVA : True Form",
+    "SUPREME",
+    "Sakura",
+    "Santa's Sleigh",
+    "Serenity",
+    "Shattered",
+    "Shiver",
+    "Shoreblooms",
+    "Singularity",
+    "Skibidi",
+    "Soar",
+    "Sorcerous",
+    "Stalemate",
+    "Star Spotter",
+    "Starfire",
+    "Starstruck",
+    "Steampunk",
+    "Storm",
+    "Storm: True Form",
+    "Syberis",
+    "THE ULTIMATE BATTLE",
+    "TRAGEDY",
+    "Teacher",
+    "Tidal",
+    "Uncommon",
+    "VIRTUAL",
+    "Voltage",
+    "White Place: Close",
+    "White Space - Far",
+    "White Space - Last Call",
+    "White Space - Terminal",
+    "Wild West",
+    "ZENITH",
+    "[Hardcore] /|Errxr|\\",
+    "[Hardcore] ACCELERATION",
+    "[Hardcore] AEGELSEEKER",
+    "[Hardcore] ASUNDER",
+    "[Hardcore] Ace",
+    "[Hardcore] Antimatter",
+    "[Hardcore] Auric Bloom",
+    "[Hardcore] Aurora",
+    "[Hardcore] Azure Periastron",
+    "[Hardcore] Baker",
+    "[Hardcore] Barista",
+    "[Hardcore] Basic",
+    "[Hardcore] Bejeweled",
+    "[Hardcore] Bloom",
+    "[Hardcore] Bloomed",
+    "[Hardcore] CATACLYSM",
+    "[Hardcore] CONCEPT",
+    "[Hardcore] Celebrity",
+    "[Hardcore] Chronos",
+    "[Hardcore] Chronos: True Form",
+    "[Hardcore] Common",
+    "[Hardcore] Constellar",
+    "[Hardcore] Constellation",
+    "[Hardcore] Coupled: Blue",
+    "[Hardcore] Coupled: Pink",
+    "[Hardcore] Crystallized",
+    "[Hardcore] Cupid",
+    "[Hardcore] Cyberspace",
+    "[Hardcore] DELTA",
+    "[Hardcore] DESCOHERENCE",
+    "[Hardcore] DIAMOND",
+    "[Hardcore] DISTORTION",
+    "[Hardcore] Dark Matter",
+    "[Hardcore] Dreams",
+    "[Hardcore] ENCORE",
+    "[Hardcore] Eclipsed",
+    "[Hardcore] Eclipsed: True Form",
+    "[Hardcore] Epistle",
+    "[Hardcore] Eternal",
+    "[Hardcore] FALSE DEITY",
+    "[Hardcore] Fallen Angel",
+    "[Hardcore] Festival",
+    "[Hardcore] Fiend",
+    "[Hardcore] Flame",
+    "[Hardcore] Flames Curse",
+    "[Hardcore] Forever",
+    "[Hardcore] Frigid",
+    "[Hardcore] Frost",
+    "[Hardcore] GALACTIC",
+    "[Hardcore] GAME TIME",
+    "[Hardcore] GAME TIME: True Form",
+    "[Hardcore] GATO",
+    "[Hardcore] GLADIATOR",
+    "[Hardcore] GOLDEN",
+    "[Hardcore] Gale",
+    "[Hardcore] Glacial",
+    "[Hardcore] Grim Reaper",
+    "[Hardcore] Grim Reaper: True Form",
+    "[Hardcore] Harmony",
+    "[Hardcore] Heat",
+    "[Hardcore] Honeymoon",
+    "[Hardcore] Infernal",
+    "[Hardcore] Infinity",
+    "[Hardcore] Iridescent",
+    "[Hardcore] Iridescent: True Form",
+    "[Hardcore] Jazzophrenia",
+    "[Hardcore] Jule",
+    "[Hardcore] Lover",
+    "[Hardcore] MOAI",
+    "[Hardcore] Mistlesnow",
+    "[Hardcore] Moonlit",
+    "[Hardcore] NULL",
+    "[Hardcore] NULLSCAPES",
+    "[Hardcore] Nebula",
+    "[Hardcore] Neptune",
+    "[Hardcore] Numerical",
+    "[Hardcore] Observer",
+    "[Hardcore] Obsession",
+    "[Hardcore] Omniscient",
+    "[Hardcore] Prism",
+    "[Hardcore] Prism: True Form",
+    "[Hardcore] Prismatic",
+    "[Hardcore] Prismatic: True Form",
+    "[Hardcore] Promise",
+    "[Hardcore] Rare",
+    "[Hardcore] Reborn",
+    "[Hardcore] Reverie",
+    "[Hardcore] Rizz",
+    "[Hardcore] SAMURAI",
+    "[Hardcore] SHADOW STALKER",
+    "[Hardcore] SINISTER",
+    "[Hardcore] STARFALL",
+    "[Hardcore] SUPERNOVA",
+    "[Hardcore] SUPERNOVA : True Form",
+    "[Hardcore] SUPREME",
+    "[Hardcore] Sakura",
+    "[Hardcore] Santa's Sleigh",
+    "[Hardcore] Serenity",
+    "[Hardcore] Shattered",
+    "[Hardcore] Shiver",
+    "[Hardcore] Shoreblooms",
+    "[Hardcore] Singularity",
+    "[Hardcore] Soar",
+    "[Hardcore] Sorcerous",
+    "[Hardcore] Stalemate",
+    "[Hardcore] Star Spotter",
+    "[Hardcore] Starfire",
+    "[Hardcore] Starstruck",
+    "[Hardcore] Steampunk",
+    "[Hardcore] Storm",
+    "[Hardcore] Storm: True Form",
+    "[Hardcore] Syberis",
+    "[Hardcore] TRAGEDY",
+    "[Hardcore] Teacher",
+    "[Hardcore] Tidal",
+    "[Hardcore] Uncommon",
+    "[Hardcore] VIRTUAL",
+    "[Hardcore] Voltage",
+    "[Hardcore] White Space - Far",
+    "[Hardcore] White Space - Last Call",
+    "[Hardcore] White Space - Terminal",
+    "[Hardcore] Wild West",
+    "[Hardcore] ZENITH",
+    "[Hardcore] altar",
+    "[Hardcore] folklore",
+    "[Hardcore] heh",
+    "[Hardcore] lost",
+    "[Hardcore] voidspire",
+    "[Hardcore] zero",
+    "[Hardcore] zero: true form",
+    "altar",
+    "e-kitten",
+    "folklore",
+    "heh",
+    "john",
+    "lost",
+    "regret",
+    "shattered false form",
+    "texturemash",
+    "voidspire",
+    "zero",
+    "zero: true form"
+}
+
+-- Auto Destroy Function
+local function startAutoDestroy()
+    task.spawn(function()
+        while autoDestroy do
+            for _, auraName in ipairs(auraDeleteList) do
+                local args = {auraName, "10"}
+                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("DeleteAura"):FireServer(unpack(args))
+                task.wait(0.05)
+            end
+            task.wait(1) -- wait time between each full cycle
+        end
+    end)
+end
+
+-- OrionLib Toggle
+MainTab:AddToggle({
+    Name = "💣 Auto Destroy Auras",
+    Default = false,
+    Callback = function(state)
+        autoDestroy = state
+        if autoDestroy then
+            startAutoDestroy()
+        end
+    end
+})
+
