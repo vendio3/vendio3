@@ -1,0 +1,125 @@
+-- Load OrionLib first
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/jensonhirst/Orion/main/source')))()
+
+-- Create the GUI window
+local Window = OrionLib:MakeWindow({
+	Name = "Vendio's Auto Reader 🧠",
+	HidePremium = false,
+	SaveConfig = false,
+	IntroText = "Reading = IQ 🔥"
+})
+
+-- References
+local LocalPlayer = game.Players.LocalPlayer
+local BookClicked = game:GetService("ReplicatedStorage").Remotes.BookClicked
+
+-- State
+local currentBook = nil
+local isReading = false
+local autoReadEnabled = false
+
+-- Ultra fast spam function (runs 3 times in parallel)
+local function startSpam()
+	if isReading or not currentBook then return end
+	isReading = true
+
+	for i = 1, 3 do
+		task.spawn(function()
+			while isReading and currentBook and currentBook:IsDescendantOf(LocalPlayer.Character) do
+				BookClicked:FireServer(currentBook.Name)
+
+				-- Optional: reading effect
+				local indicator = LocalPlayer:FindFirstChild("PlayerGui")
+					and LocalPlayer.PlayerGui:FindFirstChild("MainGui")
+					and LocalPlayer.PlayerGui.MainGui:FindFirstChild("MainGuiScript")
+
+				if indicator and indicator:FindFirstChild("ReadingIndicator") then
+					indicator.ReadingIndicator:Fire(0.001)
+				end
+
+				task.wait()
+			end
+		end)
+	end
+end
+
+local function stopSpam()
+	isReading = false
+end
+
+-- Hook a book tool
+local function hookBook(book)
+	book.Equipped:Connect(function()
+		currentBook = book
+		if autoReadEnabled then
+			startSpam()
+		end
+	end)
+
+	book.Unequipped:Connect(function()
+		if currentBook == book then
+			stopSpam()
+			currentBook = nil
+		end
+	end)
+
+	book.AncestryChanged:Connect(function()
+		if not book:IsDescendantOf(LocalPlayer.Character) and currentBook == book then
+			stopSpam()
+			currentBook = nil
+		end
+	end)
+
+	-- If the tool is already equipped when added
+	if book:IsDescendantOf(LocalPlayer.Character) then
+		currentBook = book
+		if autoReadEnabled then
+			startSpam()
+		end
+	end
+end
+
+-- Character logic
+local function onCharacter(char)
+	-- Hook existing books
+	for _, tool in ipairs(char:GetChildren()) do
+		if tool:IsA("Tool") and tool:FindFirstChild("BookConfig") then
+			hookBook(tool)
+		end
+	end
+
+	-- Watch for new tools
+	char.ChildAdded:Connect(function(child)
+		if child:IsA("Tool") and child:FindFirstChild("BookConfig") then
+			hookBook(child)
+		end
+	end)
+end
+
+-- Init character hook
+if LocalPlayer.Character then
+	onCharacter(LocalPlayer.Character)
+end
+LocalPlayer.CharacterAdded:Connect(onCharacter)
+
+-- 📘 Auto Reader Tab
+Window:MakeTab({
+	Name = "📘 Reader",
+	Icon = "rbxassetid://7733960981",
+	PremiumOnly = false
+}):AddToggle({
+	Name = "📖 Auto Read (Ultra Fast)",
+	Default = false,
+	Callback = function(toggle)
+		autoReadEnabled = toggle
+
+		if toggle then
+			startSpam()
+		else
+			stopSpam()
+		end
+	end
+})
+
+-- Launch Orion GUI
+OrionLib:Init()
