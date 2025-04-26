@@ -15,7 +15,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Aura List
 local auraList = {
-       "/|Errxr|\\",
+       "/|Errxr|",
     "911 // SHADOW STALKER",
     "ACCELERATION",
     "AEGELSEEKER",
@@ -155,7 +155,7 @@ local auraList = {
     "White Space - Terminal",
     "Wild West",
     "ZENITH",
-    "[Hardcore] /|Errxr|\\",
+    "[Hardcore] /|Errxr|",
     "[Hardcore] ACCELERATION",
     "[Hardcore] AEGELSEEKER",
     "[Hardcore] ASUNDER",
@@ -477,7 +477,7 @@ local autoDestroy = false
 
 -- List of auras to auto destroy
 local auraDeleteList = {
-       "/|Errxr|\\",
+       "/|Errxr|",
     "911 // SHADOW STALKER",
     "ACCELERATION",
     "AEGELSEEKER",
@@ -617,7 +617,7 @@ local auraDeleteList = {
     "White Space - Terminal",
     "Wild West",
     "ZENITH",
-    "[Hardcore] /|Errxr|\\",
+    "[Hardcore] /|Errxr|",
     "[Hardcore] ACCELERATION",
     "[Hardcore] AEGELSEEKER",
     "[Hardcore] ASUNDER",
@@ -787,3 +787,118 @@ MainTab:AddToggle({
     end
 })
 
+local toggled = false
+
+-- Function that keeps crafting while toggled
+local function autoCraft()
+    while toggled do
+        local args = {
+            [1] = "bronze_amulet"
+        }
+
+        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CraftItem"):InvokeServer(unpack(args))
+
+        task.wait(1) -- Adjust delay if needed
+    end
+end
+
+-- Toggle inside Main tab
+MainTab:AddToggle({
+    Name = "Auto Craft Bronze Amulet",
+    Default = false,
+    Callback = function(Value)
+        toggled = Value
+        if toggled then
+            task.spawn(autoCraft)
+        end
+    end
+})
+
+OrionLib:Init()
+
+local toggled = false
+
+-- Function that keeps crafting while toggled
+local function autoCraft()
+    while toggled do
+        local args = {
+            [1] = "silver_amulet"
+        }
+
+        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CraftItem"):InvokeServer(unpack(args))
+
+        task.wait(1) -- Adjust delay if needed
+    end
+end
+
+-- Toggle inside Main tab
+MainTab:AddToggle({
+    Name = "Auto Craft Silver Amulet",
+    Default = false,
+    Callback = function(Value)
+        toggled = Value
+        if toggled then
+            task.spawn(autoCraft)
+        end
+    end
+})
+
+OrionLib:Init()
+
+local toggled = false
+
+-- Function that keeps crafting while toggled
+local function autoCraft()
+    while toggled do
+        local args = {
+            [1] = "gold_amulet"
+        }
+
+        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CraftItem"):InvokeServer(unpack(args))
+
+        task.wait(1) -- Adjust delay if needed
+    end
+end
+
+-- Toggle inside Main tab
+MainTab:AddToggle({
+    Name = "Auto Craft Gold Amulet",
+    Default = false,
+    Callback = function(Value)
+        toggled = Value
+        if toggled then
+            task.spawn(autoCraft)
+        end
+    end
+})
+
+OrionLib:Init()
+
+local toggled = false
+
+-- Function that keeps crafting while toggled
+local function autoCraft()
+    while toggled do
+        local args = {
+            [1] = "diamond_amulet"
+        }
+
+        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CraftItem"):InvokeServer(unpack(args))
+
+        task.wait(1) -- Adjust delay if needed
+    end
+end
+
+-- Toggle inside Main tab
+MainTab:AddToggle({
+    Name = "Auto Craft Diamond Amulet",
+    Default = false,
+    Callback = function(Value)
+        toggled = Value
+        if toggled then
+            task.spawn(autoCraft)
+        end
+    end
+})
+
+OrionLib:Init()
