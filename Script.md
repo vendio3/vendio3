@@ -396,3 +396,120 @@ function teleportLoop()
         end
     end
 end
+
+-- Load OrionLib
+-- egg
+-- Variables
+local eggFolders = {
+    workspace.Easter:FindFirstChild("EASTER ISLAND EGG SPAWNS"),
+    workspace.Map:FindFirstChild("EGG_SPAWNS")
+}
+
+local ESPEnabled = false
+local allESPs = {}
+local connections = {}
+
+-- Function to create ESP for an egg
+local function createESP(egg)
+    for _, child in ipairs(egg:GetChildren()) do
+        if child:IsA("BasePart") or child:IsA("Model") then
+            local esp = Instance.new("BillboardGui")
+            esp.Name = "EggESP"
+            esp.Size = UDim2.new(0, 100, 0, 40)
+            esp.AlwaysOnTop = true
+            esp.StudsOffset = Vector3.new(0, 3, 0)
+            esp.Parent = egg
+
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(1, 0, 1, 0)
+            label.BackgroundTransparency = 1
+            label.Text = child.Name
+            label.TextColor3 = Color3.fromRGB(255, 255, 0)
+            label.TextStrokeTransparency = 0
+            label.TextScaled = true
+            label.Font = Enum.Font.SourceSansBold
+            label.Parent = esp
+
+            -- Attach to part
+            if egg:IsA("Model") and egg:FindFirstChild("PrimaryPart") then
+                esp.Adornee = egg.PrimaryPart
+            elseif egg:IsA("BasePart") then
+                esp.Adornee = egg
+            elseif child:IsA("BasePart") then
+                esp.Adornee = child
+            end
+
+            -- Cleanup if egg is deleted
+            local conn = egg.AncestryChanged:Connect(function(_, parent)
+                if not parent then
+                    if esp and esp.Parent then
+                        esp:Destroy()
+                        table.remove(allESPs, table.find(allESPs, esp))
+                    end
+                end
+            end)
+
+            table.insert(allESPs, esp)
+            table.insert(connections, conn)
+            break
+        end
+    end
+end
+
+-- Enable ESP
+local function enableESP()
+    for _, folder in ipairs(eggFolders) do
+        if folder then
+            for _, egg in ipairs(folder:GetChildren()) do
+                createESP(egg)
+            end
+            -- Listen for new eggs
+            local conn = folder.ChildAdded:Connect(function(newEgg)
+                task.wait(0.1)
+                createESP(newEgg)
+            end)
+            table.insert(connections, conn)
+        end
+    end
+end
+
+-- Disable ESP
+local function disableESP()
+    for _, esp in ipairs(allESPs) do
+        if esp and esp.Parent then
+            esp:Destroy()
+        end
+    end
+    allESPs = {}
+
+    -- Disconnect all events
+    for _, conn in ipairs(connections) do
+        if conn then
+            conn:Disconnect()
+        end
+    end
+    connections = {}
+end
+
+-- Create a tab
+local EspTab = Window:MakeTab({
+    Name = "Esp Egg",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+-- Create a Toggle
+EspTab:AddToggle({
+    Name = "Egg ESP",
+    Default = false,
+    Callback = function(Value)
+        ESPEnabled = Value
+        if ESPEnabled then
+            enableESP()
+        else
+            disableESP()
+        end
+    end
+})
+
+OrionLib:Init()
