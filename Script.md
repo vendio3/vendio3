@@ -399,7 +399,9 @@ end
 
 -- Load OrionLib
 -- egg
--- Variables
+-- Load OrionLib
+
+-- egg
 local eggFolders = {
     workspace.Easter:FindFirstChild("EASTER ISLAND EGG SPAWNS"),
     workspace.Map:FindFirstChild("EGG_SPAWNS")
@@ -407,10 +409,12 @@ local eggFolders = {
 
 local ESPEnabled = false
 local allESPs = {}
-local connections = {}
+local updateLoop -- our heartbeat loop
 
 -- Function to create ESP for an egg
 local function createESP(egg)
+    if egg:FindFirstChild("EggESP") then return end -- prevent duplicates
+
     for _, child in ipairs(egg:GetChildren()) do
         if child:IsA("BasePart") or child:IsA("Model") then
             local esp = Instance.new("BillboardGui")
@@ -439,75 +443,66 @@ local function createESP(egg)
                 esp.Adornee = child
             end
 
-            -- Cleanup if egg is deleted
-            local conn = egg.AncestryChanged:Connect(function(_, parent)
-                if not parent then
-                    if esp and esp.Parent then
-                        esp:Destroy()
-                        table.remove(allESPs, table.find(allESPs, esp))
-                    end
-                end
-            end)
-
             table.insert(allESPs, esp)
-            table.insert(connections, conn)
             break
         end
     end
 end
 
--- Enable ESP
-local function enableESP()
-    for _, folder in ipairs(eggFolders) do
-        if folder then
-            for _, egg in ipairs(folder:GetChildren()) do
-                createESP(egg)
-            end
-            -- Listen for new eggs
-            local conn = folder.ChildAdded:Connect(function(newEgg)
-                task.wait(0.1)
-                createESP(newEgg)
-            end)
-            table.insert(connections, conn)
-        end
-    end
-end
-
--- Disable ESP
-local function disableESP()
+-- Function to clear all ESPs
+local function clearAllESP()
     for _, esp in ipairs(allESPs) do
         if esp and esp.Parent then
             esp:Destroy()
         end
     end
     allESPs = {}
-
-    -- Disconnect all events
-    for _, conn in ipairs(connections) do
-        if conn then
-            conn:Disconnect()
-        end
-    end
-    connections = {}
 end
 
--- Create a tab
+-- Auto update ESPs every second
+local function startAutoUpdate()
+    updateLoop = task.spawn(function()
+        while ESPEnabled do
+            clearAllESP()
+            for _, folder in ipairs(eggFolders) do
+                if folder then
+                    for _, egg in ipairs(folder:GetChildren()) do
+                        if egg:IsA("Model") or egg:IsA("BasePart") then
+                            createESP(egg)
+                        end
+                    end
+                end
+            end
+            task.wait(1) -- wait 1 second
+        end
+    end)
+end
+
+local function stopAutoUpdate()
+    if updateLoop then
+        task.cancel(updateLoop)
+        updateLoop = nil
+    end
+    clearAllESP()
+end
+
+-- Create OrionLib UI
+
 local EspTab = Window:MakeTab({
     Name = "Esp Egg",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
--- Create a Toggle
 EspTab:AddToggle({
     Name = "Egg ESP",
     Default = false,
     Callback = function(Value)
         ESPEnabled = Value
         if ESPEnabled then
-            enableESP()
+            startAutoUpdate()
         else
-            disableESP()
+            stopAutoUpdate()
         end
     end
 })
