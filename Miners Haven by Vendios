@@ -23,6 +23,22 @@ local SettingsTab = Window:MakeTab({
 
 SettingsTab:AddLabel("Auto Layout Switch Settings")
 
+local FactoryTab = Window:MakeTab({
+    Name = "Factory",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+FactoryTab:AddLabel("Factory Speed Adjuster")
+
+local NPCTab = Window:MakeTab({
+    Name = "NPC Teleport",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+NPCTab:AddLabel("Teleport to NPCs & Factory")
+
 -- Control Variables
 local runningLayout1, runningLayout2, runningLayout3 = false, false, false
 local autoRebirth, autoDrop = false, false
@@ -32,6 +48,234 @@ local autoRegularBox, autoUnrealBox, autoInfernoBox = false, false, false
 local autoPulse = false
 local lastLoadedLayout = nil -- Keeps track of the last loaded layout
 local layoutSwitchThreshold = 1e3 -- Default threshold value
+local Tycoons = workspace:WaitForChild("Tycoons")
+local lockedValue = 7
+local lockEnabled = true
+local myFactory
+local RunService = game:GetService("RunService")
+local DroppedParts = workspace:WaitForChild("DroppedParts")
+local oreSpeedMultiplier = 3
+local boostEnabled = false
+local function teleportTo(target)
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local hrp = character:WaitForChild("HumanoidRootPart")
+
+    if not target then
+        warn("⚠️ Target not found!")
+        return
+    end
+
+    local cframeTarget
+
+    if target:IsA("Model") then
+        if target:FindFirstChild("HumanoidRootPart") then
+            cframeTarget = target.HumanoidRootPart.CFrame
+        elseif target:FindFirstChild("Head") then
+            cframeTarget = target.Head.CFrame
+        else
+            for _, part in ipairs(target:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    cframeTarget = part.CFrame
+                    break
+                end
+            end
+        end
+    elseif target:IsA("BasePart") then
+        cframeTarget = target.CFrame
+    end
+
+    if cframeTarget then
+        hrp.CFrame = cframeTarget + Vector3.new(0, 5, 0)
+        print("[✅] Teleported to:", target:GetFullName())
+    else
+        warn("⚠️ Could not find a valid position for:", target.Name)
+    end
+end
+
+-- Add Teleport Buttons
+local function addTeleportButton(name, npc)
+    NPCTab:AddButton({
+        Name = name,
+        Callback = function()
+            teleportTo(npc)
+        end
+    })
+end
+
+-- 🧍 NPC Teleports
+local tower = workspace.Map:FindFirstChild("Tower")
+local wizardTower = tower and tower:FindFirstChild("Wizard Tower")
+local craftsmanTarget = (wizardTower and wizardTower:GetChildren()[557]) or nil
+
+addTeleportButton("Craftsman (Wizard Tower #557)", craftsmanTarget)
+addTeleportButton("Box Shop (SpookMcDook)", workspace.Map:FindFirstChild("SpookMcDook", true))
+addTeleportButton("Guest666 (JohnDoe)", workspace.Map:FindFirstChild("JohnDoe", true))
+addTeleportButton("Superstitious Craftsman (Draedon)", workspace.Map:FindFirstChild("Draedon", true))
+
+-- 🧭 Find NPCs Button
+NPCTab:AddButton({
+    Name = "🔍 Find All NPCs in Map",
+    Callback = function()
+        print("\n===== 🔍 NPC SCANNER RESULTS =====")
+        local count = 0
+        for _, obj in ipairs(workspace.Map:GetDescendants()) do
+            if obj:IsA("Model") or obj:IsA("BasePart") then
+                if obj:FindFirstChild("Humanoid") or obj:FindFirstChild("Head") or obj.Name:lower():find("npc") or obj.Name:lower():find("dude") or obj.Name:lower():find("john") or obj.Name:lower():find("craft") or obj.Name:lower():find("shop") then
+                    print("• " .. obj:GetFullName())
+                    count += 1
+                end
+            end
+        end
+        print("===== ✅ Found " .. count .. " possible NPCs =====\n")
+        if count == 0 then
+            warn("⚠️ No NPC-like objects found in workspace.Map.")
+        end
+    end
+})
+
+-- 🏭 Find Player's Factory
+local function findMyFactory()
+    local player = game.Players.LocalPlayer
+    local tycoons = workspace:FindFirstChild("Tycoons")
+    if not tycoons then
+        warn("⚠️ Tycoons folder not found in workspace.")
+        return nil
+    end
+
+    for _, factory in ipairs(tycoons:GetChildren()) do
+        local owner = factory:FindFirstChild("Owner")
+        if owner and owner.Value == player.Name then
+            print("[🏭] Found your factory:", factory.Name)
+            return factory
+        end
+    end
+    warn("⚠️ Could not find your factory. Are you the owner of one?")
+    return nil
+end
+
+-- Add Teleport to Factory Button
+NPCTab:AddButton({
+    Name = "🏭 Teleport to My Factory",
+    Callback = function()
+        local factory = findMyFactory()
+        if factory then
+            teleportTo(factory)
+        end
+    end
+})
+
+--
+FactoryTab:AddSlider({
+    Name = "Ore Speed Multiplier",
+    Min = 1,
+    Max = 10,
+    Default = 3,
+    Color = Color3.fromRGB(0, 255, 0),
+    Increment = 1,
+    ValueName = "x Speed",
+    Save = true,
+    Callback = function(Value)
+        oreSpeedMultiplier = Value
+    end
+})
+
+-- Toggle (Enable/Disable Ore Speed Boost)
+FactoryTab:AddToggle({
+    Name = "Enable Ore Speed Boost",
+    Default = false,
+    Save = true,
+    Callback = function(State)
+        boostEnabled = State
+    end
+})
+
+-- Conveyor Speed Logic
+-- Conveyor Speed Logic (Horizontal Boost Only)
+RunService.Heartbeat:Connect(function()
+	if not boostEnabled then return end
+
+	for _, factory in ipairs(DroppedParts:GetChildren()) do
+		if factory.Name:match("^Factory%d+$") then
+			for _, ore in ipairs(factory:GetChildren()) do
+				if ore:IsA("BasePart") then
+					local vel = ore.AssemblyLinearVelocity
+					if vel.Magnitude > 0 then
+						-- Only boost horizontal (X/Z) movement
+						local horizontal = Vector3.new(vel.X * oreSpeedMultiplier, vel.Y, vel.Z * oreSpeedMultiplier)
+						ore.AssemblyLinearVelocity = horizontal
+					end
+				end
+			end
+		end
+	end
+end)
+
+--// Find Player’s Factory
+local function getPlayerFactory()
+	local playerName = game.Players.LocalPlayer.Name
+	for _, factory in ipairs(Tycoons:GetChildren()) do
+		local owner = factory:FindFirstChild("Owner")
+		if owner and owner.Value == playerName then
+			return factory
+		end
+	end
+	return nil
+end
+
+--// Lock Speed Function
+local function lockAdjustSpeed(factory)
+	if not factory then return end
+	local adjustSpeed = factory:WaitForChild("AdjustSpeed")
+	adjustSpeed.Value = lockedValue
+
+	task.spawn(function()
+		while task.wait(0.2) do
+			if lockEnabled and adjustSpeed.Value ~= lockedValue then
+				adjustSpeed.Value = lockedValue
+			end
+		end
+	end)
+end
+
+--// Auto-detect Factory
+task.spawn(function()
+	repeat
+		myFactory = getPlayerFactory()
+		task.wait(1)
+	until myFactory
+	lockAdjustSpeed(myFactory)
+	print("[✅] AdjustSpeed locked at", lockedValue, "for:", myFactory.Name)
+end)
+
+--// Slider (AdjustSpeed Value)
+FactoryTab:AddSlider({
+	Name = "AdjustSpeed Value",
+	Min = 1,
+	Max =100,
+	Default = 7,
+	Color = Color3.fromRGB(0, 255, 0),
+	Increment = 1,
+	ValueName = "Speed",
+	Save = true,
+	Callback = function(Value)
+		lockedValue = Value
+		if myFactory and myFactory:FindFirstChild("AdjustSpeed") then
+			myFactory.AdjustSpeed.Value = lockedValue
+		end
+	end
+})
+
+--// Toggle (Lock On/Off)
+FactoryTab:AddToggle({
+	Name = "Lock Speed (Prevent Game Changes)",
+	Default = true,
+	Save = true,
+	Callback = function(State)
+		lockEnabled = State
+	end
+})
+
 
 -- Function to load a layout (prevents unnecessary reloads)
 local function loadLayout(layoutName)
@@ -506,5 +750,7 @@ EspTab:AddToggle({
         end
     end
 })
+
+
 
 OrionLib:Init()
