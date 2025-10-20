@@ -1,5 +1,16 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/jensonhirst/Orion/main/source')))()
 
+-- 🟢 Anti-AFK (Auto Enabled)
+task.spawn(function()
+    local vu = game:GetService("VirtualUser")
+    game:GetService("Players").LocalPlayer.Idled:Connect(function()
+        vu:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+        task.wait(1)
+        vu:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+    end)
+    print("[🟢 Anti-AFK] Enabled")
+end)
+
 local Window = OrionLib:MakeWindow({
     Name = "MH",
     HidePremium = false,
