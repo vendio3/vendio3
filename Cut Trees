@@ -1,0 +1,204 @@
+--// Orion UI Loader
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/jensonhirst/Orion/main/source')))()
+
+--// Services
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+
+local player = Players.LocalPlayer
+local Character = player.Character or player.CharacterAdded:Wait()
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+
+--// Game References
+local TreeEvent = ReplicatedStorage:WaitForChild("Signal"):WaitForChild("Tree")
+local ChestEvent = ReplicatedStorage:WaitForChild("Signal"):WaitForChild("ChestFunction")
+local TreesFolder = workspace:WaitForChild("TreesFolder")
+local ChestFolder = workspace:WaitForChild("ChestFolder")
+local MapsFolder = workspace:WaitForChild("Games"):WaitForChild("Maps")
+
+--// Orion Window
+local Window = OrionLib:MakeWindow({
+	Name = "🌳 Tree & 💎 Chest Hub (Baseplate TP + Chest16/17)",
+	HidePremium = false,
+	SaveConfig = false
+})
+
+--// Variables
+local autoDamage = false
+local loopRunning = false
+local autoOpen = false
+local openRunning = false
+local autoTP = false
+local tpRunning = false
+local DAMAGE_RADIUS = 300
+local DAMAGE_INTERVAL = 0.15
+
+--// Helper
+local function getHumanoidRoot()
+	local char = player.Character or player.CharacterAdded:Wait()
+	return char:FindFirstChild("HumanoidRootPart")
+end
+
+local function forceTeleportTo(position)
+	local char = player.Character or player.CharacterAdded:Wait()
+	local root = char:WaitForChild("HumanoidRootPart")
+	root.Velocity = Vector3.zero
+	root.AssemblyLinearVelocity = Vector3.zero
+	char:PivotTo(CFrame.new(position + Vector3.new(0, 5, 0)))
+end
+
+---------------------------------------------------------
+-- 🌳 AUTO DAMAGE TREES
+---------------------------------------------------------
+local function autoDamageNearbyTrees()
+	loopRunning = true
+	while autoDamage do
+		local hrp = getHumanoidRoot()
+		if not hrp then
+			task.wait(0.3)
+			continue
+		end
+		local myPos = hrp.Position
+		local nearby = {}
+
+		for _, tree in ipairs(TreesFolder:GetChildren()) do
+			if tree:IsA("Model") and string.match(tree.Name, "^World %d+_%d+$") then
+				local part = tree:FindFirstChild("PrimaryPart") or tree:FindFirstChildWhichIsA("BasePart")
+				if part then
+					local dist = (part.Position - myPos).Magnitude
+					if dist <= DAMAGE_RADIUS then
+						table.insert(nearby, tree)
+					end
+				end
+			end
+		end
+
+		if #nearby > 0 then
+			for _, tree in ipairs(nearby) do
+				pcall(function()
+					TreeEvent:FireServer("damage", tree.Name)
+				end)
+			end
+		else
+			task.wait(0.3)
+		end
+
+		task.wait(DAMAGE_INTERVAL)
+	end
+	loopRunning = false
+end
+
+---------------------------------------------------------
+-- 💎 AUTO OPEN CHESTS
+---------------------------------------------------------
+local chestList = {}
+for i = 1, 17 do
+	table.insert(chestList, "Chest" .. i)
+	table.insert(chestList, "Chest" .. i .. "_Giant")
+	table.insert(chestList, "Chest" .. i .. "_Huge")
+end
+
+local function openAllChestsFast()
+	openRunning = true
+	while autoOpen do
+		for _, chestName in ipairs(chestList) do
+			pcall(function()
+				ChestEvent:InvokeServer("Open", chestName)
+			end)
+		end
+		task.wait(0.1)
+	end
+	openRunning = false
+end
+
+---------------------------------------------------------
+-- 💎 AUTO TELEPORT TO CHEST16 & 17 (After Baseplate)
+---------------------------------------------------------
+local function autoTeleportToChest()
+	tpRunning = true
+
+	-- Step 1: Teleport to baseplate first
+	local baseplate = MapsFolder["World 4"].Scriptable:FindFirstChild("Baseplate")
+	if baseplate and baseplate:IsA("BasePart") then
+		forceTeleportTo(baseplate.Position)
+		task.wait(1)
+	end
+
+	-- Step 2: Continuously search and teleport to Chest16 & 17
+	while autoTP do
+		for _, chest in ipairs(ChestFolder:GetChildren()) do
+			if not autoTP then break end
+			if chest and chest:IsA("Model") then
+				local name = chest.Name
+				if name == "Chest17" or name == "Chest17_Huge" or name == "Chest17_Giant"
+				or name == "Chest16" or name == "Chest16_Huge" or name == "Chest16_Giant" then
+					local primary = chest:FindFirstChild("PrimaryPart") or chest:FindFirstChildWhichIsA("BasePart")
+					if primary then
+						forceTeleportTo(primary.Position)
+						task.wait(0.3)
+						VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+						task.wait(0.1)
+						VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+						task.wait(1)
+					end
+				end
+			end
+		end
+		task.wait(0.5)
+	end
+
+	tpRunning = false
+end
+
+---------------------------------------------------------
+-- 🌳 ORION UI SETUP
+---------------------------------------------------------
+local TreeTab = Window:MakeTab({
+	Name = "🌳 Tree Farm",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+
+local ChestTab = Window:MakeTab({
+	Name = "💎 Chest Farm",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+
+-- 🌳 Tree Tab
+TreeTab:AddToggle({
+	Name = "🌳 Auto Damage Nearby Trees (Real-Time)",
+	Default = false,
+	Callback = function(state)
+		autoDamage = state
+		if state and not loopRunning then
+			task.spawn(autoDamageNearbyTrees)
+		end
+	end
+})
+
+-- 💎 Chest Tab
+ChestTab:AddToggle({
+	Name = "💎 Auto Open All Chests",
+	Default = false,
+	Callback = function(state)
+		autoOpen = state
+		if autoOpen and not openRunning then
+			task.spawn(openAllChestsFast)
+		end
+	end
+})
+
+ChestTab:AddToggle({
+	Name = "⚡ Auto Teleport to Chest16 & 17 (Baseplate First)",
+	Default = false,
+	Callback = function(state)
+		autoTP = state
+		if autoTP and not tpRunning then
+			task.spawn(autoTeleportToChest)
+		end
+	end
+})
+
+OrionLib:Init()
