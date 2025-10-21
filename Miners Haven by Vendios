@@ -616,57 +616,78 @@ MainTab:AddToggle({
 
 -- Teleport Loop Function
 -- Teleport Loop Function (Includes BirthdayPresent)
+-- Auto Teleport with Real-Time Detection
 function teleportLoop()
     local player = game.Players.LocalPlayer
     local character = player.Character
 
-    if character and character:FindFirstChild("HumanoidRootPart") then
-        local humanoidRootPart = character.HumanoidRootPart
-        local originalPosition = humanoidRootPart.CFrame -- Store original position
+    if not character then
+        repeat task.wait() until player.Character
+        character = player.Character
+    end
 
-        while autoTeleport do -- Only run if the toggle is ON
-            task.wait(0.001)
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    local originalPosition = humanoidRootPart.CFrame
 
-            local boxesFolder = workspace:FindFirstChild("Boxes")
-            local hasBoxes = false
+    local function teleportTo(target)
+        if target and target:IsA("BasePart") then
+            humanoidRootPart.CFrame = target.CFrame + Vector3.new(0, humanoidRootPart.Size.Y / 2, 0)
+            task.wait(0.05)
+        end
+    end
 
-            -- Create a combined table of both regular boxes and birthday presents
-            local allTargets = {}
-
-            if boxesFolder then
-                -- Add all Boxes
-                for _, box in pairs(boxesFolder:GetChildren()) do
-                    table.insert(allTargets, box)
-                end
-
-                -- Add all Birthday Presents inside Boxes (if it exists)
-                local birthdayFolder = boxesFolder:FindFirstChild("BirthdayPresent")
-                if birthdayFolder then
-                    for _, present in pairs(birthdayFolder:GetChildren()) do
-                        table.insert(allTargets, present)
-                    end
+    -- Function to get all current boxes and presents
+    local function getAllTargets()
+        local all = {}
+        local boxesFolder = workspace:FindFirstChild("Boxes")
+        if boxesFolder then
+            for _, box in pairs(boxesFolder:GetChildren()) do
+                if box:IsA("BasePart") or box:IsA("Model") then
+                    table.insert(all, box)
                 end
             end
-
-            if #allTargets > 0 then
-                for _, target in pairs(allTargets) do
-                    if not autoTeleport then return end
-                    if target:IsA("Part") or target:IsA("MeshPart") then
-                        hasBoxes = true
-                        humanoidRootPart.CFrame = target.CFrame + Vector3.new(0, humanoidRootPart.Size.Y / 2, 0)
-                        task.wait(0.05)
+            local birthdayFolder = boxesFolder:FindFirstChild("BirthdayPresent")
+            if birthdayFolder then
+                for _, present in pairs(birthdayFolder:GetChildren()) do
+                    if present:IsA("BasePart") or present:IsA("Model") then
+                        table.insert(all, present)
                     end
-                end
-            end
-
-            -- If no boxes or presents are found, return to original position
-            if not hasBoxes then
-                while autoTeleport and #allTargets == 0 do
-                    humanoidRootPart.CFrame = originalPosition
-                    task.wait(0.1)
                 end
             end
         end
+        return all
+    end
+
+    -- Connect new box detection
+    local boxesFolder = workspace:WaitForChild("Boxes")
+    local birthdayFolder = boxesFolder:FindFirstChild("BirthdayPresent")
+
+    local function connectFolder(folder)
+        if not folder then return end
+        folder.ChildAdded:Connect(function(newBox)
+            if autoTeleport then
+                task.wait(0.1) -- wait until fully spawned
+                teleportTo(newBox)
+            end
+        end)
+    end
+
+    connectFolder(boxesFolder)
+    connectFolder(birthdayFolder)
+
+    -- Continuous loop
+    while autoTeleport do
+        local targets = getAllTargets()
+        if #targets > 0 then
+            for _, target in pairs(targets) do
+                if not autoTeleport then return end
+                teleportTo(target)
+            end
+        else
+            humanoidRootPart.CFrame = originalPosition
+            task.wait(0.5)
+        end
+        task.wait(0.1)
     end
 end
 
