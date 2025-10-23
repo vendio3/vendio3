@@ -67,6 +67,29 @@ local RunService = game:GetService("RunService")
 local DroppedParts = workspace:WaitForChild("DroppedParts")
 local oreSpeedMultiplier = 3
 local boostEnabled = false
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local autoPressZ = false
+
+--// 🔵 AUTO PRESS KEY Z
+MainTab:AddToggle({
+    Name = "Auto Press Z",
+    Default = false,
+    Callback = function(Value)
+        autoPressZ = Value
+        if Value then
+            task.spawn(function()
+                while autoPressZ do
+                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Z, false, game)
+                    task.wait(0.05)
+                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Z, false, game)
+                    task.wait(0.05) -- adjust for faster/slower key press
+                end
+            end)
+        end
+    end
+})
+
+
 local function teleportTo(target)
     local player = game.Players.LocalPlayer
     local character = player.Character or player.CharacterAdded:Wait()
@@ -617,74 +640,78 @@ MainTab:AddToggle({
 -- Teleport Loop Function
 -- Teleport Loop Function (Includes BirthdayPresent)
 -- Auto Teleport with Real-Time Detection
+-- Auto Teleport to Boxes (Dynamic Real-Time Detection)
+-- 🟢 Auto Teleport to Boxes (Closer Version)
 function teleportLoop()
     local player = game.Players.LocalPlayer
-    local character = player.Character
+    local character = player.Character or player.CharacterAdded:Wait()
+    local hrp = character:WaitForChild("HumanoidRootPart")
+    local originalCFrame = hrp.CFrame
 
-    if not character then
-        repeat task.wait() until player.Character
-        character = player.Character
-    end
-
-    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-    local originalPosition = humanoidRootPart.CFrame
-
-    local function teleportTo(target)
-        if target and target:IsA("BasePart") then
-            humanoidRootPart.CFrame = target.CFrame + Vector3.new(0, humanoidRootPart.Size.Y / 2, 0)
+    local function safeTeleport(target)
+        if not target then return end
+        local cf
+        if target:IsA("Model") and target.PrimaryPart then
+            cf = target.PrimaryPart.CFrame
+        elseif target:IsA("BasePart") then
+            cf = target.CFrame
+        else
+            for _, part in ipairs(target:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    cf = part.CFrame
+                    break
+                end
+            end
+        end
+        if cf then
+            -- ✅ Teleport slightly behind and close to the box (1.5 studs away, 0.5 studs up)
+            hrp.CFrame = cf * CFrame.new(0, 0.5, 1.5)
             task.wait(0.05)
         end
     end
 
-    -- Function to get all current boxes and presents
-    local function getAllTargets()
-        local all = {}
-        local boxesFolder = workspace:FindFirstChild("Boxes")
-        if boxesFolder then
-            for _, box in pairs(boxesFolder:GetChildren()) do
-                if box:IsA("BasePart") or box:IsA("Model") then
-                    table.insert(all, box)
-                end
-            end
-            local birthdayFolder = boxesFolder:FindFirstChild("BirthdayPresent")
-            if birthdayFolder then
-                for _, present in pairs(birthdayFolder:GetChildren()) do
-                    if present:IsA("BasePart") or present:IsA("Model") then
-                        table.insert(all, present)
-                    end
-                end
+    local function getAllBoxes(folder)
+        local boxes = {}
+        for _, obj in ipairs(folder:GetDescendants()) do
+            if obj:IsA("BasePart") or obj:IsA("Model") then
+                table.insert(boxes, obj)
             end
         end
-        return all
+        return boxes
     end
 
-    -- Connect new box detection
-    local boxesFolder = workspace:WaitForChild("Boxes")
-    local birthdayFolder = boxesFolder:FindFirstChild("BirthdayPresent")
+    local BoxesFolder = workspace:WaitForChild("Boxes")
 
-    local function connectFolder(folder)
-        if not folder then return end
-        folder.ChildAdded:Connect(function(newBox)
+    local function watchFolder(folder)
+        folder.ChildAdded:Connect(function(child)
             if autoTeleport then
-                task.wait(0.1) -- wait until fully spawned
-                teleportTo(newBox)
+                task.wait(0.2)
+                if child:IsA("Folder") then
+                    watchFolder(child)
+                elseif child:IsA("BasePart") or child:IsA("Model") then
+                    print("[📦 New Box Detected]:", child.Name)
+                    safeTeleport(child)
+                end
             end
         end)
+        for _, sub in ipairs(folder:GetChildren()) do
+            if sub:IsA("Folder") then
+                watchFolder(sub)
+            end
+        end
     end
 
-    connectFolder(boxesFolder)
-    connectFolder(birthdayFolder)
+    watchFolder(BoxesFolder)
 
-    -- Continuous loop
     while autoTeleport do
-        local targets = getAllTargets()
-        if #targets > 0 then
-            for _, target in pairs(targets) do
+        local allBoxes = getAllBoxes(BoxesFolder)
+        if #allBoxes > 0 then
+            for _, box in ipairs(allBoxes) do
                 if not autoTeleport then return end
-                teleportTo(target)
+                safeTeleport(box)
             end
         else
-            humanoidRootPart.CFrame = originalPosition
+            hrp.CFrame = originalCFrame
             task.wait(0.5)
         end
         task.wait(0.1)
@@ -800,7 +827,6 @@ EspTab:AddToggle({
         end
     end
 })
-
 
 
 OrionLib:Init()
