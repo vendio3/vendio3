@@ -1,0 +1,1 @@
+ loadstring(game:HttpGet(('https://raw.githubusercontent.com/vendio3/vendio3/refs/heads/main/Miners%20Haven%20Script%20St%20Patrick%20event')))()
