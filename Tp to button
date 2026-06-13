@@ -1,0 +1,173 @@
+--// Button ESP + Auto TP (Cycles Through ALL Buttons)
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+local Tycoon = workspace.Tycoon8
+
+local AutoTP = false
+local CurrentIndex = 1
+
+--// ESP Folder
+local ESPFolder = Instance.new("Folder")
+ESPFolder.Name = "ButtonESP"
+ESPFolder.Parent = game.CoreGui
+
+--// GUI
+local Gui = Instance.new("ScreenGui")
+Gui.Name = "ButtonTools"
+Gui.ResetOnSpawn = false
+Gui.Parent = game.CoreGui
+
+local Toggle = Instance.new("TextButton")
+Toggle.Parent = Gui
+Toggle.Size = UDim2.new(0, 150, 0, 50)
+Toggle.Position = UDim2.new(0, 20, 0.5, -25)
+Toggle.Text = "Auto TP: OFF"
+Toggle.TextScaled = true
+
+--// Draggable
+local dragging = false
+local dragStart
+local startPos
+
+Toggle.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = Toggle.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+UIS.InputChanged:Connect(function(input)
+	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+		local delta = input.Position - dragStart
+
+		Toggle.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+Toggle.MouseButton1Click:Connect(function()
+	AutoTP = not AutoTP
+	Toggle.Text = AutoTP and "Auto TP: ON" or "Auto TP: OFF"
+end)
+
+--// ESP Creator
+local function createESP(button)
+	if not button:IsA("BasePart") then
+		return
+	end
+
+	local id = button:GetFullName():gsub("%.", "_")
+
+	if ESPFolder:FindFirstChild(id) then
+		return
+	end
+
+	local marker = Instance.new("Folder")
+	marker.Name = id
+	marker.Parent = ESPFolder
+
+	local highlight = Instance.new("Highlight")
+	highlight.Adornee = button
+	highlight.FillTransparency = 0.5
+	highlight.Parent = marker
+
+	local billboard = Instance.new("BillboardGui")
+	billboard.Size = UDim2.new(0, 150, 0, 35)
+	billboard.StudsOffset = Vector3.new(0, 3, 0)
+	billboard.AlwaysOnTop = true
+	billboard.Adornee = button
+	billboard.Parent = marker
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 1, 0)
+	label.BackgroundTransparency = 1
+	label.TextScaled = true
+	label.Text = button.Parent.Name
+	label.Parent = billboard
+end
+
+--// Scan Existing Buttons
+for _, obj in ipairs(Tycoon:GetDescendants()) do
+	if obj.Name == "Button" and obj:IsA("BasePart") then
+		createESP(obj)
+	end
+end
+
+--// New Buttons
+Tycoon.DescendantAdded:Connect(function(obj)
+	if obj.Name == "Button" and obj:IsA("BasePart") then
+		createESP(obj)
+	end
+end)
+
+--// Get Buttons
+local function getButtons()
+	local buttons = {}
+
+	for _, obj in ipairs(Tycoon:GetDescendants()) do
+		if obj.Name == "Button"
+		and obj:IsA("BasePart")
+		and obj.Parent then
+			table.insert(buttons, obj)
+		end
+	end
+
+	table.sort(buttons, function(a, b)
+		return a:GetFullName() < b:GetFullName()
+	end)
+
+	return buttons
+end
+
+--// Auto TP Loop
+task.spawn(function()
+	while true do
+		task.wait(0.15)
+
+		if AutoTP then
+			local Character = LocalPlayer.Character
+			local HRP = Character and Character:FindFirstChild("HumanoidRootPart")
+
+			if HRP then
+				local buttons = getButtons()
+
+				if #buttons > 0 then
+
+					if CurrentIndex > #buttons then
+						CurrentIndex = 1
+					end
+
+					local button = buttons[CurrentIndex]
+
+					if button and button.Parent then
+						print("Teleporting:", button:GetFullName())
+
+						HRP.CFrame = button.CFrame + Vector3.new(0, 3, 0)
+
+						pcall(function()
+							firetouchinterest(HRP, button, 0)
+							task.wait(0.05)
+							firetouchinterest(HRP, button, 1)
+						end)
+					end
+
+					CurrentIndex += 1
+				end
+			end
+		end
+	end
+end)
