@@ -1,0 +1,94 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local AutoFruit = false
+
+-- GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "AutoLemonGUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = game.CoreGui
+
+local Toggle = Instance.new("TextButton")
+Toggle.Parent = ScreenGui
+Toggle.Size = UDim2.new(0,150,0,50)
+Toggle.Position = UDim2.new(0,20,0,20)
+Toggle.Text = "Auto Lemon: OFF"
+
+Toggle.MouseButton1Click:Connect(function()
+	AutoFruit = not AutoFruit
+	Toggle.Text = AutoFruit and "Auto Lemon: ON" or "Auto Lemon: OFF"
+end)
+
+local function GetHRP()
+	local Character = LocalPlayer.Character
+	return Character and Character:FindFirstChild("HumanoidRootPart")
+end
+
+local function GetFruitPart(fruit)
+	if fruit:IsA("BasePart") then
+		return fruit
+	end
+
+	return fruit:FindFirstChildWhichIsA("BasePart", true)
+end
+
+task.spawn(function()
+	while true do
+		if AutoFruit then
+
+			local HRP = GetHRP()
+
+			if HRP then
+
+				local Fruits = {}
+
+				for _, tycoon in ipairs(workspace:GetChildren()) do
+					local constant = tycoon:FindFirstChild("Constant")
+
+					if constant then
+						local trees = constant:FindFirstChild("Trees")
+
+						if trees then
+							for _, obj in ipairs(trees:GetDescendants()) do
+								if obj.Name == "Fruit" then
+									table.insert(Fruits, obj)
+								end
+							end
+						end
+					end
+				end
+
+				for _, fruit in ipairs(Fruits) do
+
+					if not AutoFruit then
+						break
+					end
+
+					if fruit and fruit.Parent then
+
+						local part = GetFruitPart(fruit)
+
+						if part then
+
+							HRP.CFrame = part.CFrame + Vector3.new(0,2,0)
+
+							local cd =
+								fruit:FindFirstChildOfClass("ClickDetector")
+								or part:FindFirstChildOfClass("ClickDetector")
+								or fruit:FindFirstChild("ClickDetector", true)
+
+							if cd then
+								fireclickdetector(cd)
+							end
+
+							task.wait(0.05)
+						end
+					end
+				end
+			end
+		end
+
+		task.wait(0.05)
+	end
+end)
