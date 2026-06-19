@@ -1,0 +1,457 @@
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+--// 1. Unified Master Tycoon Finder
+local Tycoon = nil
+local function findMyTycoon()
+    for _, obj in ipairs(workspace:GetChildren()) do
+        if obj:FindFirstChild("Owner") and tostring(obj.Owner.Value) == LocalPlayer.Name then
+            return obj
+        elseif obj:FindFirstChild("OwnerId") and tonumber(obj.OwnerId.Value) == LocalPlayer.UserId then
+            return obj
+        elseif string.find(string.lower(obj.Name), string.lower(LocalPlayer.Name)) then
+            return obj
+        end
+    end
+    
+    local tycoonsFolder = workspace:FindFirstChild("Tycoons") or workspace:FindFirstChild("AllTycoons")
+    if tycoonsFolder then
+        for _, obj in ipairs(tycoonsFolder:GetChildren()) do
+            if obj:FindFirstChild("Owner") and tostring(obj.Owner.Value) == LocalPlayer.Name then
+                return obj
+            elseif obj:FindFirstChild("OwnerId") and tonumber(obj.OwnerId.Value) == LocalPlayer.UserId then
+                return obj
+            elseif string.find(string.lower(obj.Name), string.lower(LocalPlayer.Name)) then
+                return obj
+            end
+        end
+    end
+    return nil
+end
+
+Tycoon = findMyTycoon() or workspace:FindFirstChild("Tycoon4") or workspace:FindFirstChild("Tycoon8") or workspace:FindFirstChild("Tycoon9")
+
+--// 2. Main Configs, Timing & State Control Variables
+local AutoFruit = false
+local SpammingUpgrades = false
+local AutoTP = false
+local SpammingPurchases = false
+
+local CurrentIndex = 1
+local TP_DELAY = 0.1      
+local SPAM_DELAY = 0.5   -- Time between full spam waves
+local BATCH_SIZE = 10    -- Fired batch size 10 for faster spamming
+
+local cachedUpgradeRemotes = {}
+local cachedPurchaseRemotes = {}
+local cachedButtons = {} 
+
+local upgradeLocations = {
+    "Lemon Stand", "LemonDash", "Lemon Depot", "Lemon Trading",
+    "Lemon Labs", "Lemon Robotics", "Lemon Republic", "LemonX"
+}
+
+--// 3. Automation Utility Helper Subroutines
+local function GetHRP()
+    local Character = LocalPlayer.Character
+    return Character and Character:FindFirstChild("HumanoidRootPart")
+end
+
+local function GetFruitPart(fruit)
+    if fruit:IsA("BasePart") then return fruit end
+    return fruit:FindFirstChildWhichIsA("BasePart", true)
+end
+
+local function cacheUpgradeRemotesFunc()
+    table.clear(cachedUpgradeRemotes)
+    if Tycoon and Tycoon:FindFirstChild("Purchases") then
+        for _, name in ipairs(upgradeLocations) do
+            local targetFolder = Tycoon.Purchases:FindFirstChild(name)
+            if targetFolder then
+                pcall(function()
+                    local upgradeRemote = targetFolder:WaitForChild(name, 1):WaitForChild(name, 1):WaitForChild("Upgrade", 1)
+                    if upgradeRemote and upgradeRemote:IsA("RemoteFunction") then
+                        table.insert(cachedUpgradeRemotes, upgradeRemote)
+                    end
+                end)
+            end
+        end
+    end
+end
+
+local function cacheAllPurchasesFunc()
+    table.clear(cachedPurchaseRemotes)
+    if Tycoon and Tycoon:FindFirstChild("Purchases") then
+        for _, descendant in ipairs(Tycoon.Purchases:GetDescendants()) do
+            if descendant.Name == "Purchase" and descendant:IsA("RemoteFunction") then
+                table.insert(cachedPurchaseRemotes, descendant)
+            end
+        end
+    end
+end
+
+local function cacheButtonsFunc()
+    table.clear(cachedButtons)
+    if Tycoon then
+        for _, obj in ipairs(Tycoon:GetDescendants()) do
+            if obj.Name == "Button" and obj:IsA("BasePart") and obj.Parent then
+                table.insert(cachedButtons, obj)
+            end
+        end
+        table.sort(cachedButtons, function(a, b) return a:GetFullName() < b:GetFullName() end)
+    end
+end
+
+-- Run initial hardware configurations cache
+cacheButtonsFunc()
+
+--// 4. Create Unified Master Panel GUI
+local Gui = Instance.new("ScreenGui")
+Gui.Name = "UnifiedTycoonSuite"
+Gui.ResetOnSpawn = false
+Gui.Parent = game.CoreGui
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = Gui
+MainFrame.Size = UDim2.new(0, 220, 0, 310)
+MainFrame.Position = UDim2.new(0, 30, 0.5, -155)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = MainFrame
+
+local Header = Instance.new("TextLabel")
+Header.Name = "Header"
+Header.Parent = MainFrame
+Header.Size = UDim2.new(1, 0, 0, 35)
+Header.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+Header.Text = Tycoon and ("Suite: " .. Tycoon.Name) or "Tycoon Master Suite"
+Header.TextColor3 = Color3.fromRGB(255, 220, 100)
+Header.TextSize = 14
+Header.Font = Enum.Font.SourceSansBold
+
+local HeaderCorner = Instance.new("UICorner")
+HeaderCorner.CornerRadius = UDim.new(0, 8)
+HeaderCorner.Parent = Header
+
+-- Reusable Button Instance Factory Function
+local function createMenuButton(name, text, posIndex, defaultColor)
+    local btn = Instance.new("TextButton")
+    btn.Name = name
+    btn.Parent = MainFrame
+    btn.Size = UDim2.new(0, 200, 0, 50)
+    btn.Position = UDim2.new(0, 10, 0, 45 + ((posIndex - 1) * 60))
+    btn.BackgroundColor3 = defaultColor
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextScaled = true
+    btn.Font = Enum.Font.SourceSansBold
+    
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 6)
+    btnCorner.Parent = btn
+    return btn
+end
+
+-- Individual Toggle Buttons Initialization
+local ButtonFruit = createMenuButton("ButtonFruit", "Auto Lemon: OFF", 1, Color3.fromRGB(200, 50, 50))
+local ButtonSpamUpgrade = createMenuButton("ButtonSpamUpgrade", "Spam Upgrades: OFF", 2, Color3.fromRGB(200, 50, 50))
+local ButtonTP = createMenuButton("ButtonTP", "Auto TP Pads: OFF", 3, Color3.fromRGB(200, 50, 50))
+local ButtonSpamPurchase = createMenuButton("ButtonSpamPurchase", "Spam Purchases: OFF", 4, Color3.fromRGB(200, 50, 50))
+
+--// 5. Mobile & PC Dragging System Configuration
+local dragging = false
+local dragInput, dragStart, startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+MainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
+
+--// 6. Minimize & Maximize Core System
+local MinimizedButton = Instance.new("TextButton")
+MinimizedButton.Name = "MinimizedButton"
+MinimizedButton.Parent = Gui
+MinimizedButton.Size = UDim2.new(0, 45, 0, 45)
+MinimizedButton.Position = UDim2.new(0, 30, 0.5, -22)
+MinimizedButton.BackgroundColor3 = Color3.fromRGB(255, 220, 100)
+MinimizedButton.Text = "🍋"
+MinimizedButton.TextSize = 22
+MinimizedButton.Visible = false
+
+local MinCorner = Instance.new("UICorner")
+MinCorner.CornerRadius = UDim.new(1, 0)
+MinCorner.Parent = MinimizedButton
+
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "CloseButton"
+CloseButton.Parent = MainFrame
+CloseButton.Size = UDim2.new(0, 30, 0, 25)
+CloseButton.Position = UDim2.new(1, -35, 0, 5)
+CloseButton.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+CloseButton.Text = "-"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.TextSize = 18
+CloseButton.Font = Enum.Font.SourceSansBold
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 4)
+CloseCorner.Parent = CloseButton
+
+CloseButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+    MinimizedButton.Position = UDim2.new(0, MainFrame.AbsolutePosition.X, 0, MainFrame.AbsolutePosition.Y)
+    MinimizedButton.Visible = true
+end)
+
+MinimizedButton.MouseButton1Click:Connect(function()
+    MinimizedButton.Visible = false
+    MainFrame.Position = UDim2.new(0, MinimizedButton.AbsolutePosition.X, 0, MinimizedButton.AbsolutePosition.Y)
+    MainFrame.Visible = true
+end)
+
+local minDragging = false
+local minDragStart, minStartPos
+MinimizedButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        minDragging = true
+        minDragStart = input.Position
+        minStartPos = MinimizedButton.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then minDragging = false end
+        end)
+    end
+end)
+UIS.InputChanged:Connect(function(input)
+    if minDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - minDragStart
+        MinimizedButton.Position = UDim2.new(minStartPos.X.Scale, minStartPos.X.Offset + delta.X, minStartPos.Y.Scale, minStartPos.Y.Offset + delta.Y)
+    end
+end)
+
+--// 7. Click Connection Event Configuration UI Mappings
+ButtonFruit.MouseButton1Click:Connect(function()
+    AutoFruit = not AutoFruit
+    ButtonFruit.Text = AutoFruit and "Auto Lemon: ON" or "Auto Lemon: OFF"
+    ButtonFruit.BackgroundColor3 = AutoFruit and Color3.fromRGB(0, 180, 255) or Color3.fromRGB(200, 50, 50)
+end)
+
+ButtonSpamUpgrade.MouseButton1Click:Connect(function()
+    SpammingUpgrades = not SpammingUpgrades
+    if SpammingUpgrades then
+        ButtonSpamUpgrade.Text = "Spam Upgrades: ON"
+        ButtonSpamUpgrade.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
+        cacheUpgradeRemotesFunc()
+    else
+        ButtonSpamUpgrade.Text = "Spam Upgrades: OFF"
+        ButtonSpamUpgrade.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    end
+end)
+
+ButtonTP.MouseButton1Click:Connect(function()
+    AutoTP = not AutoTP
+    if AutoTP then
+        cacheButtonsFunc()
+        ButtonTP.Text = "Auto TP Pads: ON"
+        ButtonTP.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
+    else
+        ButtonTP.Text = "Auto TP Pads: OFF"
+        ButtonTP.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    end
+end)
+
+ButtonSpamPurchase.MouseButton1Click:Connect(function()
+    SpammingPurchases = not SpammingPurchases
+    if SpammingPurchases then
+        ButtonSpamPurchase.Text = "Spam Purchases: ON"
+        ButtonSpamPurchase.BackgroundColor3 = Color3.fromRGB(130, 50, 200)
+        cacheAllPurchasesFunc()
+    else
+        ButtonSpamPurchase.Text = "Spam Purchases: OFF"
+        ButtonSpamPurchase.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    end
+end)
+
+--// 8. Isolation Architecture Engine Loops
+
+-- Loop 1: Auto Lemon Picker
+task.spawn(function()
+    while true do
+        if AutoFruit then
+            local HRP = GetHRP()
+            if HRP then
+                local Fruits = {}
+                for _, tycoon in ipairs(workspace:GetChildren()) do
+                    local constant = tycoon:FindFirstChild("Constant")
+                    if constant then
+                        local trees = constant:FindFirstChild("Trees")
+                        if trees then
+                            for _, obj in ipairs(trees:GetDescendants()) do
+                                if obj.Name == "Fruit" then
+                                    table.insert(Fruits, obj)
+                                end
+                            end
+                        end
+                    end
+                end
+
+                for _, fruit in ipairs(Fruits) do
+                    if not AutoFruit then break end
+                    if fruit and fruit.Parent then
+                        local part = GetFruitPart(fruit)
+                        if part then
+                            HRP.CFrame = part.CFrame + Vector3.new(0,2,0)
+                            local cd = fruit:FindFirstChildOfClass("ClickDetector")
+                                or part:FindFirstChildOfClass("ClickDetector")
+                                or fruit:FindFirstChild("ClickDetector", true)
+
+                            if cd then fireclickdetector(cd) end
+                            task.wait(0.05)
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(0.05)
+    end
+end)
+
+-- Loop 2: Spam Upgrades Binary Search Optimizer Loop
+task.spawn(function()
+    while true do
+        task.wait(0.3)
+        if SpammingUpgrades then
+            for i = 1, #cachedUpgradeRemotes do
+                if not SpammingUpgrades then break end
+                local remote = cachedUpgradeRemotes[i]
+                
+                coroutine.wrap(function()
+                    local success, result = pcall(function() return remote:InvokeServer(100) end)
+                    if success and result == true then return end
+                    
+                    local low, high = 1, 99
+                    while low <= high do
+                        if not SpammingUpgrades then break end
+                        local mid = math.floor((low + high) / 2)
+                        local testSuccess, testResult = pcall(function() return remote:InvokeServer(mid) end)
+                        
+                        if testSuccess and testResult == true then
+                            low = mid + 1
+                        else
+                            high = mid - 1
+                        end
+                        task.wait()
+                    end
+                end)()
+            end
+        end
+    end
+end)
+
+-- Loop 3: Optimized Controlled Teleport Pad Loop (With Dynamic Target Array Refreshes)
+task.spawn(function()
+    while true do
+        task.wait(TP_DELAY)
+        
+        if AutoTP then
+            local Character = LocalPlayer.Character
+            local HRP = Character and Character:FindFirstChild("HumanoidRootPart")
+            local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+            
+            if HRP and Humanoid and Humanoid.Health > 0 then
+                local buttons = cachedButtons 
+                if #buttons > 0 then
+                    if CurrentIndex > #buttons then 
+                        CurrentIndex = 1 
+                        cacheButtonsFunc() 
+                    end
+                    
+                    local button = buttons[CurrentIndex]
+                    
+                    if button and button.Parent and button:IsA("BasePart") then
+                        Humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+                        Humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+                        
+                        local _, currentRotationY = HRP.CFrame:ToEulerAnglesXYZ()
+                        local dropHeight = (button.Size.Y / 2) + 2.5
+                        
+                        HRP.CFrame = CFrame.new(button.Position + Vector3.new(0, dropHeight, 0)) * CFrame.Angles(0, currentRotationY, 0)
+                        HRP.AssemblyLinearVelocity = Vector3.new(0, -60, 0)
+                        Humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
+                        
+                        task.wait(0.03) 
+                        Humanoid:ChangeState(Enum.HumanoidStateType.Landed)
+                        
+                        local touchPart = Character:FindFirstChild("RightFoot") or Character:FindFirstChild("Right Leg") or HRP
+                        if touchPart then
+                            pcall(function()
+                                firetouchinterest(touchPart, button, 0)
+                                firetouchinterest(touchPart, button, 1)
+                            end)
+                        end
+                    end
+                    CurrentIndex = CurrentIndex + 1
+                end
+            end
+        end
+    end
+end)
+
+-- Loop 4: New Controlled Remote Spam Loop (Network Protected & Batched)
+task.spawn(function()
+    while true do
+        task.wait(SPAM_DELAY)
+        
+        if SpammingPurchases then
+            for i = 1, #cachedPurchaseRemotes do
+                if not SpammingPurchases then break end 
+                
+                local remote = cachedPurchaseRemotes[i]
+                if remote and remote.Parent then
+                    task.defer(function()
+                        pcall(function()
+                            remote:InvokeServer(false)
+                        end)
+                    end)
+                end
+                
+                -- Process micro batches based on size of 10 to clear network pipes
+                if i % BATCH_SIZE == 0 then
+                    task.wait(0.01)
+                end
+            end
+        end
+    end
+end)
